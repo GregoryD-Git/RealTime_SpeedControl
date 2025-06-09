@@ -1,3 +1,4 @@
+// VFall Risk - Gait perturbation protocol for ramped perturbations in either acceleration or decelleration perturbations until a fall occurs
 // BertecQualisysTest.cpp : Defines the entry point for the console application.
 // Bertec Closed-loop Control
 
@@ -26,13 +27,6 @@
 
 std::condition_variable cv;
 
-//first iteration is skipped, therfore set to zero so no belt speed change is missed
-int w[76] = {0, 2 ,3 ,2 ,1 ,2 ,1 ,2 ,1 ,2 ,3 ,2 ,0 ,1 ,2 ,0 ,3 ,0 ,1 ,2 ,0 ,1 ,3 ,0 ,2 ,1 ,3 ,1 ,2 ,1 ,2 ,0 ,2 ,3 ,2 ,0 ,1 ,3 ,0 ,2 ,0 ,1 ,0 ,2 ,1 ,0 ,1 ,3 ,2 ,1 ,3 ,2 ,3 ,0 ,3 ,1 ,0 ,3 ,1 ,2 ,1 ,2 ,3 ,2 ,1 ,2 ,1 ,3 ,1 ,3 ,2 ,1 ,3 ,0 ,1 ,2 };
-
-//for calculating time in milliseconds with clock()
-//using std::cout;
-//using std::endl;
-
 //#include <vector>
 //#include <algorithm>
 //#include <functional>
@@ -50,9 +44,7 @@ FILE *stream;
 int nFrameNumber = 0;
 
 //parameters for detecting heel strike
-float threshold = 200;
-//int refreshInterval = 10;      // Refresh period in milliseconds
-
+float threshold = 50;
 enum Leg
 {
 	STANCE,
@@ -129,7 +121,6 @@ Event detectHSTOr(Leg legr) //detect right heelstrike and toeoff
 			return NONE;
 }
 
-//Initial acceleration
 double acc = 0.5;
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -150,9 +141,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		Sleep(1000);
 	}
 
-	// ----------------------------------------------- CHANGE IP ADDRESS --------------------------------------------------------------------
+
 	// By default assume you want to connect to QTM at the same machine - just for testing
-	char pServerAddr[32] = "128.119.66.24"; //"localhost";
+	char pServerAddr[32] = "128.119.66.72"; //"localhost";
 	int	nMajorVersion = 1;
 	int nMinorVersion = 10;
 	if (!poRTProtocol.Connect(pServerAddr, QTM_RT_SERVER_BASE_PORT, 0, nMajorVersion, nMinorVersion)) {
@@ -173,35 +164,26 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::cin>>temp;
 	float Capture = temp;
 
-	std::cout<<"Enter baseline speed: ";
+	std::cout<<"Enter speed base: ";
 	std::cin>>temp;
-	//Set speed dividing by 1.05 to offset the difference between actual and set speed of the treadmill belts
-	float L_SPEED = temp/1.05;
-	float R_SPEED = temp/1.05;
+	float L_SPEED = temp;
+	float R_SPEED = temp;
 
-	std::cout<<"Enter number of ratios: ";
+	std::cout<<"Unilateral pert == 0, Bilateral == 1: ";
 	std::cin>>temp;
-	float nr = temp;
-	int nratio = nr;
+	float unibil_pert = temp;
 
-	std::cout<<"Enter limb to perturb (1-Left or 2-Right): ";
+	std::cout<<"HS == 0, SS == 1: ";
 	std::cin>>temp;
-	float pert_limb = temp;
+	float GCP_pert = temp;
 
-	std::cout<<"Enter perturbation direction (1-Down or 2-Up): ";
+	std::cout<<"Enter right perturbation size: ";
 	std::cin>>temp;
-	float pert_dir = temp;
+	float speed_pertr = temp;
 
-	//std::cout<<"Randomize strides between perturbations? (1-YES or 2-NO): ";
-	//std::cin>>temp;
-	//float pert_ran = temp;
-	//float pert_var = 100;
-
-	//if (pert_ran == 2){
-	std::cout<<"Enter number of strides between perturbations: ";
+	std::cout<<"Enter left perturbation size: ";
 	std::cin>>temp;
-	float pert_var = temp;
-	//}
+	float speed_pertl = temp;
 
 	std::cout<<"Enter perturbation acc: ";
 	std::cin>>temp;
@@ -211,14 +193,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::cin>>temp;
 	float deccel = temp;
 
-	std::cout<<"Enter number strides to perturb: ";
+	std::cout<<"Enter SS perturbation delay: ";
+	std::cin>>temp;
+	float delay_SS = temp;
+
+	std::cout<<"Enter number strides to pert: ";
 	std::cin>>temp;
 	float pertnum = temp;
 
 
 	// start treadmill
-	//TREADMILL_setSpeed(L_SPEED,R_SPEED,acc);
-	//Sleep(1000);
+	//double acc = 0.5;
+	//float L_SPEED = 1.0;
+	//float R_SPEED = 1.0;
+
+	TREADMILL_setSpeed(L_SPEED,R_SPEED,acc);
+	Sleep(1000);
 
 	// Get settings from QTM		
 	if (poRTProtocol.Connect(pServerAddr, QTM_RT_SERVER_BASE_PORT, 0, nMajorVersion, nMinorVersion)) {
@@ -232,6 +222,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		Sleep(1000);
 	}
 
+	//poRTProtocol.StartCapture();
+
 	GetForceData();
 	fprintf(stream, "%u\t", nFrameNumber);
 	fprintf(stream, "%1.4f\t", VForce[0]);
@@ -241,6 +233,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	fprintf(stream, "Leg, Event, Frame number\n");
 
 	printf("Detecting HS ...\n");
+	int nHS = 0;
 
 HANDLE hIn;
 HANDLE hOut;
@@ -265,24 +258,11 @@ if(InRec.Event.KeyEvent.wVirtualKeyCode == VK_OEM_PLUS)
 {
 
 	// Wait period to begin recording
-	//Sleep(2000);
+	Sleep(500);
 	if (Capture == 1){
 		poRTProtocol.StartCapture();
-		Sleep(1000);
+		Sleep(8000);
 	}
-
-		//Sleep(5000);
-		TREADMILL_setSpeed(L_SPEED,R_SPEED,acc);
-	
-
-	//initialize random seed
-	srand (1);
-	int nHS = 0;
-	int nVar = 0;
-
-	float rr = 0;
-	float r = 0;
-	float speed_ratio = 0;
 
 	//Begin perturbation
 	while (nHS < pertnum) {
@@ -291,104 +271,86 @@ if(InRec.Event.KeyEvent.wVirtualKeyCode == VK_OEM_PLUS)
 		if (leftLeg == STANCE){
 			if (VForce[0] < threshold){ //change from swing to stance
 				leftLeg = SWING;
-				
-				//Unilateral perturbation
-				if (pert_limb == 1 || pert_limb == 3){
-
-					//if (pert_ran == 1){
-						//pert_var = rand() %24 + 1;
+				//event capture
+				//poRTProtocol.GetState(eEvent);
+					//if (eEvent == CRTPacket::EventCaptureStarted) {
+						//char eventID[12];
+						//strcpy_s(eventID, "LTO"); //next Target
+						//poRTProtocol.SetQTMEvent(eventID);
 					//}
-
-					if (nVar == pert_var){			
-						r = w[nHS/8];
-						//r = rand() % nratio; // random number from 0:nratio inclusive
-						//std::cout<< "Ratio index" << std::endl;
-						//std::cout  << (float) r << std::endl;
-
-						// NOT USED with specified w vector
-						// while loop keeps producing another result until rr != r
-						//while (rr == r){
-							//r = rand() % nratio;
-							//std::cout  << (float) 2 - 0.1*r << std::endl;
-						//}
-						
-						// resets nVar to zero so that the speeds are changed every pert_var times
-						nVar = 0; 
-
-						speed_ratio = 2 - (1/(nr-1))*r;
-						if (pert_dir == 1){
-							TREADMILL_setSpeed(L_SPEED/speed_ratio,R_SPEED,acc_pert);
+				//Bilateral perturbation
+				if (unibil_pert == 1){
+					Sleep(delay_SS);
+				TREADMILL_setSpeed(L_SPEED + speed_pertl,R_SPEED + speed_pertr,acc_pert);
+				//Sleep(1);
+				//TREADMILL_setSpeed(L_SPEED + speed_pertl,R_SPEED + speed_pertr,acc_pert);
+				}
+				//Unilateral perturbation
+				else {
+					if (speed_pertl > 0 || GCP_pert == 0){
+						//if speed_pertl > 0, return speed from previous perturbation (can be either SS left or HS)
+						Sleep(1);
+						//return to baseline speed
+						TREADMILL_setSpeed(L_SPEED,R_SPEED,acc_pert);
+						if (GCP_pert == 0){
+							//pert left - HS
+							TREADMILL_setSpeed(L_SPEED + speed_pertl,R_SPEED,acc_pert); 
 						}
-						else {
-							TREADMILL_setSpeed(L_SPEED*speed_ratio,R_SPEED,acc_pert);
-						}
-						//std::cout<< "Ratio" << std::endl;
-						std::cout  <<(float) speed_ratio << std::endl;
-						//std::cout  <<(float) nratio  << std::endl;
-						rr = r;
-
-						//record event
-						poRTProtocol.GetState(eEvent);
-							if (eEvent == CRTPacket::EventCaptureStarted) {
-								char eventID[12];
-								strcpy_s(eventID, "deltaV_L"); //next Target
-								poRTProtocol.SetQTMEvent(eventID);
-							}
 					}
 				}
+				
 			}
 		}
 		
 		if (leftLeg == SWING){
 			if (VForce[0] > threshold){
 				leftLeg = STANCE;
-					if (pert_limb == 1 || pert_limb == 3){
-						nHS++; //count heel strike
-						nVar++; //count number of strikes between perts
-						Sleep(200);
-						std::cout	<< (float) nHS << std::endl;
-						std::cout   << (float) nVar << std::endl;
+				nHS++; //count heel strike
+				//poRTProtocol.GetState(eEvent);
+					//if (eEvent == CRTPacket::EventCaptureStarted) {
+						//char eventID[12];
+						//strcpy_s(eventID, "LIC"); //next Target
+						//poRTProtocol.SetQTMEvent(eventID);
+					//}
+					//SS perturbation only
+					if (GCP_pert == 1){
+						//pert left - SS
+						Sleep(delay_SS);
+						if(unibil_pert == 0){
+							//for HS pert
+							TREADMILL_setSpeed(L_SPEED + speed_pertl,R_SPEED,acc_pert);
+						}
+						else
+						{// for bilateral pert
+							TREADMILL_setSpeed(L_SPEED,R_SPEED,acc_pert);
+						}
 					}
-				}
 			}
-		//}
+		}
 		if (rightLeg == STANCE){
 			if (VForce[1] < threshold){
 				rightLeg = SWING;
+				//poRTProtocol.GetState(eEvent);
+					//if (eEvent == CRTPacket::EventCaptureStarted) {
+						//char eventID[12];
+						//strcpy_s(eventID, "RTO"); //next Target
+						//poRTProtocol.SetQTMEvent(eventID);
+					//}
+
+				if (unibil_pert == 1){
+					Sleep(delay_SS);
+				TREADMILL_setSpeed(L_SPEED + speed_pertr,R_SPEED + speed_pertl,acc_pert);
+				//Sleep(1);
+				//TREADMILL_setSpeed(L_SPEED + speed_pertr,R_SPEED + speed_pertl,acc_pert);
+				}
 				
-					if (pert_limb == 2 || pert_limb == 3){
-						if (nVar == pert_var){			
-							//r = rand() % nratio; // random number from 0:nratio inclusive
-							//std::cout  << (float) r << std::endl;
-							r = w[nHS/8];
-
-							//NOT USED with specified w vector
-								// while loop keeps producing another result until rr != r
-							//while (rr == r){
-								//r = rand() % nratio;
-								//std::cout  << (float) r << std::endl;
-							//}
-						
-							// resets nVar to zero so that the speeds are changed every pert_var times
-							nVar = 0; 
-
-							speed_ratio = 2 - (1/(nr-1))*r;
-							if (pert_dir == 1){
-								TREADMILL_setSpeed(L_SPEED,R_SPEED/speed_ratio,acc_pert);
-							}
-							else {
-								TREADMILL_setSpeed(L_SPEED,R_SPEED*speed_ratio,acc_pert);
-							}
-							std::cout  <<(float) speed_ratio << std::endl;
-							rr = r;
-
-							//record event
-							poRTProtocol.GetState(eEvent);
-								if (eEvent == CRTPacket::EventCaptureStarted) {
-									char eventID[12];
-									strcpy_s(eventID, "deltaV_R"); //next Target
-									poRTProtocol.SetQTMEvent(eventID);
-								}
+				else{
+					if (speed_pertr > 0 || GCP_pert == 0){
+						Sleep(1);
+						TREADMILL_setSpeed(L_SPEED,R_SPEED,acc_pert);
+						if (GCP_pert == 0){
+							TREADMILL_setSpeed(L_SPEED,R_SPEED + speed_pertr,acc_pert); 
+						}
 					}
 				}
 			}
@@ -396,33 +358,35 @@ if(InRec.Event.KeyEvent.wVirtualKeyCode == VK_OEM_PLUS)
 		if (rightLeg == SWING){
 			if (VForce[1] > threshold){
 					rightLeg = STANCE;
+					//poRTProtocol.GetState(eEvent);
+						//if (eEvent == CRTPacket::EventCaptureStarted) {
+							//char eventID[12];
+							//strcpy_s(eventID, "RIC"); //next Target
+							//poRTProtocol.SetQTMEvent(eventID);
+						//}
 
-					if (pert_limb == 2 || pert_limb == 3){
-						nHS++; //count heel strike
-						nVar++; //count number of strikes between perts
-						Sleep(200);
-						std::cout	<< (float) nHS << std::endl;
-						std::cout   << (float) nVar << std::endl;
+					if (GCP_pert == 1){
+						Sleep(delay_SS);
+						if (unibil_pert == 0){
+							TREADMILL_setSpeed(L_SPEED,R_SPEED + speed_pertr,acc_pert);
+						}
+						else
+						{
+							TREADMILL_setSpeed(L_SPEED,R_SPEED,acc_pert);
+
+						}
 					}
 				}
-			}
-		} 
-}
-
-if (Capture == 1){
-			std::cout  << "stop recording" << std::endl;
-			poRTProtocol.StopCapture();
-			Sleep(500);
-	}
-	std::cout  << "Complete" << std::endl;
+		}
+	} 
 	//Protocol ends and returns speeds to baseline quickly, then stops
-	//TREADMILL_setSpeed(L_SPEED/2,R_SPEED/2,acc_pert);
-	Sleep(1000);
-	TREADMILL_setSpeed(0,0,deccel);
+	TREADMILL_setSpeed(L_SPEED,R_SPEED,acc_pert);
+	//Sleep(500);
+	//TREADMILL_setSpeed(0,0,deccel);
 	//Sleep(1000);
 
 };
 }
 }
-
+}
 	
