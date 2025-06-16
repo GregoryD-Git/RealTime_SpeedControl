@@ -4,7 +4,7 @@ C++ code to collect and manipulate the Bertec split belt treadmill belt speeds i
 Below is a graphic from my dissertation work outlining the speed controller set up and the operation on the treadmill with a participant.
 
 ### Real Time Controller Set Up
-![Real Time Speed and Foot Placement Feedback System](Foot placement and speed change example 2.jpg)
+<img src="Foot placement and speed change example 2.jpg" width="300">
 
 (A) Overview of experimental set up and margin of stability calculation. STa group
 example given. Visual feedback was provided in front of the treadmill with stride-bystride cadence displayed, highlighted in green when matched to ±1 stride per minute. Foot
@@ -21,13 +21,17 @@ of 𝜉𝜉.
 cycle for the S2a group (left panel) and the FPa and STa groups (right panel). Yellow
 outlined boxes indicate either loose (30 cm, S2a, FPa) or tight (3 cm, STa) constraints on
 foot placement. Horizontal colored bars indicate left and right stance. Gray shading
-indicates double support. (C) Experimental paradigm. White panels indicated tied walking
+indicates double support. 
+
+(C) Experimental paradigm. White panels indicated tied walking
 conditions. Gray shading is tied-belt feedback training. Yellow shading indicates splitbelt walking trials. Training adaptation (block 3, trials 1-2) included the three
 experimental groups (S2a, cyan; FPa, yellow; STa, magenta). The transfer adaptation
 block on day 2 involved all three experimental groups plus the control group (CON,
 black). Pink and blue horizontal lines indicated belt speeds for each limb. Y-axis indicates
 belt speed, x-axis by strides. Metronomes in block 3 indicate the percentage of preferred
-stride rate by indicated belt speed. (D) Spatiotemporal measures, over time. Black and
+stride rate by indicated belt speed. 
+
+(D) Spatiotemporal measures, over time. Black and
 gray lines are ankle marker positions for the fast and slow limbs, in center-of-mass space.
 Up indicates forward. Pink fill and lines indicate slow limb parameters, while blue
 indicates fast. Dash-dot lines indicated heel-strike and toe-off events. Foot placement
