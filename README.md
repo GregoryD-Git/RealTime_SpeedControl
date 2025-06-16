@@ -4,7 +4,7 @@ C++ code to collect and manipulate the Bertec split belt treadmill belt speeds i
 Below is a graphic from my dissertation work outlining the speed controller set up and the operation on the treadmill with a participant.
 
 ### Real Time Controller Set Up
-<img src="Foot placement and speed change example 2.jpg" width="300">
+![Real Time Controller Set Up](images/Foot placement and speed change example 2.jpg)
 
 (A) Overview of experimental set up and margin of stability calculation. STa group
 example given. Visual feedback was provided in front of the treadmill with stride-bystride cadence displayed, highlighted in green when matched to ±1 stride per minute. Foot
