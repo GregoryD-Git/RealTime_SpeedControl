@@ -3,9 +3,11 @@ C++ code to collect and manipulate the Bertec split belt treadmill belt speeds i
 
 Below is a graphic from my dissertation work outlining the speed controller set up and the operation on the treadmill with a participant.
 
-Panel A is the physical set-up while panel B shows the experimental set-up and condition progression.
+Panel A is the physical set-up while panel C shows the experimental set-up and condition progression.
 
-Panel 
+Panel B shows real filtered belt-speed data for two of the conditions from 0-100% of the gait cycle.
+
+Panel D shows the ankle marker data and spatiotemporal event descriptions.
 
 ### Real Time Controller Set Up
 ![Real Time Controller Set Up](RealTimeController.JPG)
